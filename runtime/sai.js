@@ -359,7 +359,7 @@ const commands = {
     }
 
     const completedAt = getTimestamp();
-    const startTime = new Date(task.started_at).getTime();
+    const startTime = task.started_at ? new Date(task.started_at).getTime() : 0;
 
     task.status = 'done';
     task.completed_at = completedAt;
