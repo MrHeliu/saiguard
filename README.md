@@ -2,6 +2,7 @@
 
 **S**olo **AI** **Guard** — A mechanical gatekeeper for single-agent development workflows.
 
+[![CI](https://github.com/MrHeliu/saiguard/actions/workflows/ci.yml/badge.svg)](https://github.com/MrHeliu/saiguard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js >= 14](https://img.shields.io/badge/node-%3E%3D14-brightgreen.svg)](https://nodejs.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)
@@ -183,6 +184,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for guidelines. Bug reports, feature requ
 
 **S**olo **AI** **Guard** — 单 AI 开发工作流的机械门禁引擎。
 
+[![CI](https://github.com/MrHeliu/saiguard/actions/workflows/ci.yml/badge.svg)](https://github.com/MrHeliu/saiguard/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Node.js >= 14](https://img.shields.io/badge/node-%3E%3D14-brightgreen.svg)](https://nodejs.org/)
 [![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg)](CONTRIBUTING.md)

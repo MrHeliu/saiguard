@@ -1,0 +1,39 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [18, 20]
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Init project
+        run: node runtime/sai.js init
+
+      - name: Check status
+        run: node runtime/sai.js status
+
+      - name: Run health check
+        run: node runtime/sai.js check
+
+      - name: Verify state files exist
+        run: |
+          test -f runtime/config.json || (echo "FAIL: config.json missing" && exit 1)
+          test -f runtime/tasks.json || (echo "FAIL: tasks.json missing" && exit 1)
+          test -f runtime/project.json || (echo "FAIL: project.json missing" && exit 1)
+          test -f runtime/events.json || (echo "FAIL: events.json missing" && exit 1)
+          echo "All state files verified"
