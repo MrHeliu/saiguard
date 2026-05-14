@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>S-AI-Guard Dashboard</title>
+    <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://unpkg.com/vue@3/dist/vue.global.js"></script>
+    <script src="data.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        @theme {
+            --color-primary: #6366f1;
+            --color-surface: #f4f7fc;
+            --font-outfit: 'Outfit', sans-serif;
+            --font-mono: 'JetBrains Mono', monospace;
+        }
+        body { font-family: var(--font-outfit); background-color: var(--color-surface); color: #1e293b; }
+        .glass-card { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.5); box-shadow: 0 4px 20px -2px rgba(0, 0, 0, 0.05); }
+        .ping-green { position: relative; display: flex; width: 8px; height: 8px; }
+        .ping-green span { position: absolute; display: inline-flex; width: 100%; height: 100%; border-radius: 9999px; opacity: 0.75; background-color: #10b981; animation: ping 1s cubic-bezier(0, 0, 0.2, 1) infinite; }
+        @keyframes ping { 75%, 100% { transform: scale(2); opacity: 0; } }
+        [v-cloak] { display: none; }
+        .timeline-track { position: relative; }
+        .timeline-track::before { content: ''; position: absolute; left: 15px; top: 0; bottom: 0; width: 2px; background: #e2e8f0; border-radius: 1px; }
+        ::-webkit-scrollbar { width: 5px; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.05); border-radius: 10px; }
+    </style>
+</head>
+<body class="p-6 md:p-12 pb-24">
+    <div id="app" v-cloak class="max-w-[1600px] mx-auto space-y-12">
+        <!-- Header -->
+        <header class="flex justify-between items-center px-2">
+            <div class="flex items-center space-x-4">
+                <div class="bg-primary p-3 rounded-2xl text-white shadow-lg shadow-primary/30"><i data-lucide="command" size="28"></i></div>
+                <h1 class="text-3xl font-black tracking-tighter text-slate-900 uppercase">
+                    AI Runtime Core <span class="text-slate-400 font-normal text-xl ml-2">Dashboard</span>
+                </h1>
+            </div>
+            <div class="flex items-center space-x-6">
+                <div class="text-right hidden md:block"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">System</p><p class="text-xs font-bold text-emerald-500">NOMINAL STABLE</p></div>
+                <span class="text-[10px] font-black uppercase tracking-[0.2em] bg-slate-900 text-white px-4 py-1.5 rounded-full shadow-sm">v2.6 Demo</span>
+            </div>
+        </header>
+
+        <!-- Master Overview + Tech Stack -->
+        <section class="glass-card rounded-[3rem] border-l-[10px] border-l-primary relative overflow-hidden">
+            <div class="absolute right-0 top-0 h-full w-[600px] bg-gradient-to-l from-primary/5 to-transparent flex items-center justify-end pr-16 opacity-30"><i data-lucide="activity" size="240" class="text-primary"></i></div>
+            <div class="p-12 space-y-12 relative z-10">
+                <div class="grid grid-cols-2 md:grid-cols-5 gap-12">
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Current Phase</p><span class="inline-block px-4 py-1 bg-primary text-white text-[10px] font-black rounded-lg shadow-sm">{{ state.overview.currentPhase }}</span></div>
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Progress</p><p class="text-4xl font-black text-slate-900">{{ state.progress }}%</p></div>
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] flex items-center">Active AGENTS <span class="ml-2 ping-green"><span></span><span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span></span></p><p class="text-3xl font-black text-slate-900">{{ state.overview.activeAgents }}</p></div>
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Last Update</p><p class="text-base font-bold text-slate-700">{{ state.lastUpdate }}</p></div>
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Latest Commit</p><p class="font-mono text-base font-bold text-primary tracking-tighter uppercase">#{{ state.overview.latestCommit }}</p></div>
+                </div>
+                <div class="h-px bg-slate-200/50 w-full"></div>
+                <div class="space-y-8">
+                    <div class="flex items-center space-x-3"><i data-lucide="layers" size="16" class="text-primary"></i><h2 class="text-xs font-black text-slate-800 uppercase tracking-[0.3em]">Tech Stack Matrix</h2></div>
+                    <div class="grid grid-cols-2 lg:grid-cols-5 gap-12">
+                        <div v-for="stack in state.techStacks" :key="stack.title" class="space-y-5">
+                            <div class="text-[9px] font-black text-slate-400 uppercase tracking-[0.2em] border-b border-slate-100 pb-2.5">{{ stack.title }}</div>
+                            <div class="space-y-2.5"><div v-for="item in stack.items" class="flex justify-between items-center"><span class="text-xs font-bold text-slate-600">{{ item.name }}</span><span class="font-mono text-[10px] text-slate-400 bg-slate-50 px-1.5 py-0.5 rounded">{{ item.version }}</span></div></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Agent Monitor Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-8">
+            <div v-for="card in state.projectStatus" :key="card.title" class="glass-card rounded-[2.5rem] p-8 flex flex-col h-full hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
+                <div class="flex items-center space-x-3 mb-8 text-slate-400"><i :data-lucide="card.icon" size="20"></i><h2 class="text-[11px] font-black text-slate-800 uppercase tracking-widest">{{ card.title }}</h2></div>
+                <div class="space-y-5 flex-grow text-[11px]">
+                    <div><p class="text-[9px] font-black text-slate-300 uppercase mb-1.5 tracking-tighter">Status</p><p class="font-bold text-slate-700">{{ card.status }}</p></div>
+                    <div><p class="text-[9px] font-black text-primary uppercase mb-1.5 tracking-tighter">Current Task</p><p class="font-black leading-tight text-slate-900 text-[12px]">{{ card.currentTask }}</p></div>
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-100"><p class="text-[8px] font-black text-emerald-500 uppercase tracking-widest mb-1.5">Last Action</p><p class="text-[11px] text-slate-500 font-bold leading-tight">{{ card.latestAction }}</p></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Task Center + Timeline -->
+        <div class="grid grid-cols-1 xl:grid-cols-5 gap-12">
+            <!-- Left: Task Center -->
+            <section class="xl:col-span-3 flex flex-col space-y-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 h-[40px]">
+                    <h2 class="text-2xl font-black text-slate-900 flex items-center tracking-tighter"><i data-lucide="layout-grid" size="24" class="mr-3 text-primary"></i> Task Center</h2>
+                    <div class="relative w-full md:w-[280px]">
+                        <i data-lucide="search" size="14" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input v-model="taskSearch" type="text" placeholder="Search tasks..." class="bg-white border border-slate-200 rounded-3xl pl-12 pr-6 py-2 text-xs w-full shadow-inner outline-none focus:border-primary">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-grow">
+                    <div v-for="cat in ['Todo', 'In Progress', 'Done']" :key="cat" class="flex flex-col space-y-4">
+                        <div class="px-2"><h3 class="text-xs font-black text-slate-900 flex items-center uppercase"><span class="w-3 h-3 rounded-full mr-2" :class="cat === 'Todo' ? 'bg-amber-500 animate-pulse' : (cat === 'In Progress' ? 'bg-emerald-500' : 'bg-slate-400')"></span>{{ cat }}</h3></div>
+                        <div class="glass-card rounded-[2.5rem] overflow-hidden !p-0 border-t-4 flex flex-col flex-grow" :class="cat === 'Todo' ? 'border-t-amber-500' : (cat === 'In Progress' ? 'border-t-emerald-500' : 'border-t-slate-300')">
+                            <div class="flex-grow">
+                                <table class="w-full text-left text-[10px]"><tbody class="divide-y divide-slate-50"><tr v-for="task in getPaginatedTasks(cat)" class="hover:bg-slate-50 transition-all"><td class="px-4 py-4"><div class="font-black text-slate-800 mb-1 leading-tight">{{ task.name }}</div><div class="flex items-center space-x-1.5 text-[8px] text-slate-400 font-bold uppercase"><span class="text-primary">{{ task.module }}</span> <span>/</span> <span>{{ task.agent }}</span></div></td><td class="px-4 py-4 text-right"><div class="text-[8px] font-black px-1.5 py-0.5 rounded-full" :class="task.priority === 'P0' ? 'bg-primary text-white' : 'bg-slate-100 text-slate-400'">{{ task.priority }}</div></td></tr></tbody></table>
+                            </div>
+                            <div class="p-4 bg-slate-50/50 flex justify-between items-center text-[10px] font-black text-slate-400 border-t border-slate-100"><button @click="prevPage(cat)" :disabled="getPagination(cat) === 1" class="hover:text-primary disabled:opacity-10"><i data-lucide="chevron-left" size="14"></i></button><span>{{ getPagination(cat) }} / {{ getTotalPages(cat) }}</span><button @click="nextPage(cat)" :disabled="getPagination(cat) >= getTotalPages(cat)" class="hover:text-primary disabled:opacity-10"><i data-lucide="chevron-right" size="14"></i></button></div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Right: Timeline -->
+            <section class="xl:col-span-2 flex flex-col space-y-8">
+                <div class="flex items-center h-[40px] px-2"><h2 class="text-2xl font-black text-slate-900 flex items-center tracking-tighter"><i data-lucide="clock" size="24" class="mr-3 text-primary"></i> AI Behavior Timeline</h2></div>
+                <div class="glass-card rounded-[3rem] p-8 flex-grow overflow-hidden relative">
+                    <div class="timeline-track overflow-y-auto pr-2" style="max-height: 600px;">
+                        <div v-for="log in state.aiBehaviorLogs" :key="log.time" class="relative pl-10 pb-10 group">
+                            <div class="absolute left-[11px] top-1.5 w-2.5 h-2.5 rounded-full border-2 border-white z-10 transition-transform group-hover:scale-150" :class="log.status.includes('OK') ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'bg-amber-400 shadow-[0_0_10px_rgba(251,191,36,0.5)]'"></div>
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-[10px] font-mono font-black text-slate-400 bg-slate-50 px-2 py-0.5 rounded">{{ log.time }}</span>
+                                    <span class="text-[9px] font-black uppercase text-slate-900 bg-slate-100 px-2 py-0.5 rounded-lg">{{ log.agent }}</span>
+                                </div>
+                                <div class="space-y-1">
+                                    <h4 class="text-xs font-black text-slate-800 uppercase tracking-tight">{{ log.behavior }}</h4>
+                                    <p class="text-[11px] text-slate-500 font-bold leading-relaxed">{{ log.desc }}</p>
+                                </div>
+                                <div class="flex flex-wrap gap-1.5 pt-1">
+                                    <span v-for="file in log.files" class="text-[8px] font-mono text-slate-400 bg-white border border-slate-100 px-1.5 py-0.5 rounded italic">#{{ file }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- Bottom: Git, Memory, Blockers -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-10">
+            <section class="space-y-6">
+                <h2 class="text-xl font-black text-slate-800 flex items-center uppercase tracking-tighter px-2"><i data-lucide="git-merge" class="mr-3 text-primary"></i> Git Status</h2>
+                <div class="glass-card rounded-[3rem] p-10 space-y-6 border-l-[6px] border-l-slate-900">
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Branch</p><p class="text-sm font-black text-slate-800">{{ state.gitStatus.currentBranch || 'N/A' }}</p></div>
+                    <div class="space-y-2"><p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Latest COMMIT</p><p class="text-xs font-mono font-black text-primary">{{ state.gitStatus.latestCommit || 'N/A' }}</p></div>
+                    <div class="flex justify-between border-t border-slate-100 pt-6">
+                        <div class="text-center"><p class="text-[9px] font-black text-slate-400 uppercase">Modified</p><p class="text-2xl font-black text-slate-900">{{ state.gitStatus.modifiedFiles || 0 }}</p></div>
+                        <div class="text-right max-w-[60%]"><p class="text-[9px] font-black text-slate-400 uppercase mb-2">Uncommitted</p><p class="text-[11px] text-slate-500 font-bold leading-tight">{{ state.gitStatus.uncommittedChanges || 'None' }}</p></div>
+                    </div>
+                </div>
+            </section>
+            <section class="space-y-6">
+                <h2 class="text-xl font-black text-slate-800 flex items-center uppercase tracking-tighter px-2"><i data-lucide="hard-drive" class="mr-3 text-primary"></i> Memory</h2>
+                <div class="glass-card rounded-[3rem] p-10 space-y-6 border-l-[6px] border-l-emerald-500">
+                    <div class="space-y-2"><p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Architecture</p><p class="text-xs font-bold text-slate-700 leading-relaxed">{{ state.memory.architecture || 'Loading...' }}</p></div>
+                    <div class="space-y-2"><p class="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Standards</p><p class="text-xs font-bold text-slate-700 leading-relaxed">{{ state.memory.standards || 'Loading...' }}</p></div>
+                </div>
+            </section>
+            <section class="space-y-6">
+                <h2 class="text-xl font-black text-slate-800 flex items-center uppercase tracking-tighter px-2"><i data-lucide="shield-alert" class="mr-3 text-red-500"></i> Blockers</h2>
+                <div class="glass-card rounded-[3rem] p-10 space-y-6 border-l-[6px] border-l-red-500 bg-red-50/5">
+                    <div class="space-y-2"><p class="text-[10px] font-black text-red-500 uppercase tracking-widest">Current Blocker</p><p class="text-xs font-black text-red-600 bg-red-50 p-3 rounded-2xl border border-red-100">{{ state.blockers.currentBlocker || 'No immediate blockers' }}</p></div>
+                    <div class="grid grid-cols-2 gap-6 pt-2">
+                        <div class="space-y-2"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Failed Tasks</p><p v-for="t in state.blockers.failedTasks" :key="t" class="text-[11px] font-bold text-slate-600 flex items-center"><span class="w-1.5 h-1.5 bg-red-400 rounded-full mr-2"></span>{{ t }}</p></div>
+                        <div class="space-y-2"><p class="text-[9px] font-black text-slate-400 uppercase tracking-widest">Test Failures</p><p v-for="t in state.blockers.testFailures" :key="t" class="text-[11px] font-bold text-slate-600 flex items-center"><span class="w-1.5 h-1.5 bg-red-400 rounded-full mr-2"></span>{{ t }}</p></div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const { createApp, reactive, ref, onMounted, nextTick, watch } = Vue;
+        createApp({
+            setup() {
+                const state = reactive({
+                    progress: 0, lastUpdate: '', overview: {}, projectStatus: [],
+                    gitStatus: {}, memory: {}, blockers: {}, aiBehaviorLogs: [],
+                    taskCenter: [], techStacks: []
+                });
+                const taskSearch = ref('');
+                const paginations = ref({ 'Todo': 1, 'In Progress': 1, 'Done': 1 });
+                const getTasksByCategory = (cat) => { const tasks = state.taskCenter || []; return tasks.filter(t => t.status === cat && (!taskSearch.value || t.name.toLowerCase().includes(taskSearch.value.toLowerCase()) || t.agent.toLowerCase().includes(taskSearch.value.toLowerCase()))); };
+                const getTotalPages = (cat) => Math.ceil(getTasksByCategory(cat).length / 5) || 1;
+                const getPaginatedTasks = (cat) => { const filtered = getTasksByCategory(cat); const page = paginations.value[cat]; return filtered.slice((page - 1) * 5, page * 5); };
+                const getPagination = (cat) => paginations.value[cat];
+                const prevPage = (cat) => { if (paginations.value[cat] > 1) paginations.value[cat]--; };
+                const nextPage = (cat) => { if (paginations.value[cat] < getTotalPages(cat)) paginations.value[cat]++; };
+                onMounted(() => {
+                    if (window.DASHBOARD_DATA) Object.assign(state, window.DASHBOARD_DATA);
+                    nextTick(() => lucide.createIcons());
+                });
+                watch([taskSearch, paginations], () => nextTick(() => lucide.createIcons()), { deep: true });
+                return { state, taskSearch, getTasksByCategory, getPaginatedTasks, getTotalPages, getPagination, prevPage, nextPage };
+            }
+        }).mount('#app');
+    </script>
+</body>
+</html>

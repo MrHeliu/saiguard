@@ -1,0 +1,66 @@
+{
+  "project": {
+    "name": "YOUR_PROJECT_NAME",
+    "phase": "M1 - Initialization"
+  },
+  "paths": {
+    "runtime": "runtime",
+    "archive": "_archive/logs",
+    "dashboard": "dashboard/data.js",
+    "agents": {
+      "backend": "backend/output",
+      "web": "frontend/output",
+      "db": "database/output/sql",
+      "test": "test/output/automation-test"
+    }
+  },
+  "agents": {
+    "backendagent": { "type": "backend", "label": "Backend" },
+    "webagent": { "type": "web", "label": "Frontend" },
+    "dbagent": { "type": "db", "label": "Database" },
+    "testagent": { "type": "test", "label": "QA" }
+  },
+  "checkStrategies": {
+    "backend": {
+      "cmd": "mvn compile",
+      "cwd": "agents.backend",
+      "outputDir": "target",
+      "msg": "Backend compile check"
+    },
+    "web": {
+      "cmd": "npm run build",
+      "cwd": "agents.web",
+      "outputDir": "dist",
+      "msg": "Frontend build check"
+    },
+    "db": {
+      "cmd": "cat {sqlFile} | sqlite3 :memory:",
+      "cwd": "base",
+      "sqlFile": "database/output/sql/schema.sql",
+      "msg": "SQL syntax check"
+    },
+    "test": {
+      "cmd": "python3 -m pytest test/output/automation-test/",
+      "cwd": "base",
+      "msg": "Automated test regression"
+    }
+  },
+  "validFlow": {
+    "todo": ["doing"],
+    "doing": ["review", "testing", "done"],
+    "review": ["doing", "done"],
+    "testing": ["doing", "done", "review"],
+    "done": []
+  },
+  "moduleMap": {
+    "backend": "Backend",
+    "web": "Frontend",
+    "db": "Database",
+    "test": "QA",
+    "prd": "PM"
+  },
+  "techStacks": [
+    { "title": "Control", "items": [{ "name": "AI Runtime Core", "version": "v2.6" }, { "name": "Mode", "version": "Gatekeeper" }] }
+  ],
+  "zombieThresholdHours": 24
+}

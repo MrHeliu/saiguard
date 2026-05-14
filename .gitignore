@@ -1,0 +1,14 @@
+node_modules/
+dist/
+target/
+_archive/
+runtime/tasks.json
+runtime/events.json
+runtime/failures.json
+runtime/summary.json
+runtime/project.json
+runtime/config.json
+runtime/plans/
+dashboard/data.js
+.DS_Store
+*.log
