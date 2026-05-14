@@ -81,6 +81,92 @@ if (!fs.existsSync(CONFIG_FILE)) {
 const CONFIG = JSON.parse(fs.readFileSync(CONFIG_FILE, 'utf8'));
 
 // ==========================================
+// i18n
+// ==========================================
+const LOCALE = CONFIG.locale || 'en';
+
+const MSG = {
+  status: {
+    progress:     { en: 'Progress', zh: '项目进度' },
+    phase:        { en: 'Phase', zh: '当前阶段' },
+    review:       { en: 'Review', zh: '需要修复' },
+    active:       { en: 'Active', zh: '活跃执行' },
+    noActive:     { en: 'No active tasks', zh: '无活跃执行任务' },
+    todo:         { en: 'Todo (Top 3)', zh: '待办队列 (Top 3)' },
+    resumeTip:    { en: 'Run sai resume to continue', zh: '执行 sai resume 查看上下文并继续' },
+    elapsedUnit:  { en: 'min', zh: '分钟' }
+  },
+  start: {
+    notFound:     { en: 'Task not found', zh: '找不到任务 ID' },
+    invalidFlow:  { en: 'Invalid transition', zh: '非法流转' },
+    lockFailed:   { en: 'Cannot start task', zh: '无法启动任务' },
+    depsNotDone:  { en: 'not done', zh: '尚未完成' },
+    started:      { en: 'started. Plan created', zh: '已开始。已创建实施计划' },
+    resumed:      { en: 'resumed', zh: '已恢复执行' }
+  },
+  finish: {
+    notFound:     { en: 'Task not found', zh: '找不到任务 ID' },
+    invalidFlow:  { en: 'Invalid transition', zh: '非法流转' },
+    gatecheck:    { en: 'Running', zh: '正在启动' },
+    outputMissing:{ en: 'Output dir missing', zh: '产物目录缺失' },
+    outputEmpty:  { en: 'Output dir empty', zh: '产物目录为空' },
+    outputOk:     { en: 'Output verified', zh: '产物校验通过' },
+    files:        { en: 'files', zh: '文件' },
+    passed:       { en: 'Passed!', zh: '验证通过！' },
+    failed:       { en: 'Failed! Cannot mark as DONE.', zh: '验证失败！禁止标记为 DONE。' },
+    done:         { en: 'done', zh: '已完成' },
+    archived:     { en: 'events', zh: '条' }
+  },
+  fail: {
+    notFound:     { en: 'Task not found', zh: '找不到任务 ID' },
+    recorded:     { en: 'failure recorded', zh: '失败已记录' },
+    failedLabel:  { en: 'Failed', zh: '执行失败' }
+  },
+  fix: {
+    notFound:     { en: 'Task not found', zh: '找不到任务 ID' },
+    started:      { en: 'fix started', zh: '修复计划已启动' },
+    fixLabel:     { en: 'Fix started', zh: '启动修复流程' }
+  },
+  log: {
+    ok:           { en: 'Event logged', zh: '事件已记录' }
+  },
+  sync: {
+    ok:           { en: 'Dashboard synced', zh: '看板数据已同步' }
+  },
+  learn: {
+    notFound:     { en: 'Archive not found. Run finish first', zh: '找不到归档日志。请先执行 finish' },
+    action:       { en: 'Analyze', zh: '请分析' },
+    update:       { en: 'and update knowledge.md', zh: '中的行为日志并更新 knowledge.md' }
+  },
+  check: {
+    title:        { en: 'Runtime Audit Report', zh: '运行时状态审计报告' },
+    zombie:       { en: 'Zombie tasks', zh: '僵尸任务' },
+    dangling:     { en: 'Dangling agents', zh: '状态悬空' },
+    outOfSync:    { en: 'Out of sync', zh: '状态不同步' },
+    missingDeps:  { en: 'Missing deps', zh: '依赖缺失' },
+    healthy:      { en: 'Healthy', zh: '无异常' },
+    issues:       { en: 'Issues found', zh: '有异常' }
+  },
+  resume: {
+    title:        { en: 'Resume', zh: '断点续接' },
+    noActive:     { en: 'No active tasks. Run sai start <id> to begin', zh: '当前无进行中任务，使用 sai start <id> 开始新任务' },
+    planLabel:    { en: 'Plan', zh: '实施计划内容' },
+    finishTip:    { en: 'when done, or sai fail', zh: '完成后执行 sai finish' },
+    onFailure:    { en: 'on failure', zh: '失败则执行 sai fail' }
+  },
+  init: {
+    configCreated:{ en: 'config.json created from template', zh: 'config.json 已从模板创建' },
+    templateMissing:{ en: 'config.template.json not found', zh: 'config.template.json 未找到' },
+    configExists: { en: 'config.json already exists', zh: 'config.json 已存在' },
+    created:      { en: 'Created', zh: '已创建' },
+    exists:       { en: 'already exists', zh: '已存在' },
+    initialized:  { en: 'Project initialized', zh: '项目已初始化' }
+  }
+};
+
+const t = (section, key) => (MSG[section] && MSG[section][key] && MSG[section][key][LOCALE]) || MSG[section][key].en;
+
+// ==========================================
 // Path Resolution
 // ==========================================
 const resolveCwd = (key) => {
@@ -170,30 +256,30 @@ const commands = {
     const bar = '█'.repeat(filledWidth) + '░'.repeat(barWidth - filledWidth);
 
     console.log(`\n==========================================`);
-    console.log(`📊 Progress: [${bar}] ${progress}%`);
-    console.log(`🏁 Phase: ${summary.phase || CONFIG.project.phase || 'Unknown'}`);
+    console.log(`📊 ${t('status', 'progress')}: [${bar}] ${progress}%`);
+    console.log(`🏁 ${t('status', 'phase')}: ${summary.phase || CONFIG.project.phase || 'Unknown'}`);
     console.log(`==========================================`);
 
     if (review.length > 0) {
-      console.log(`\n⚠️  Review:`);
+      console.log(`\n⚠️  ${t('status', 'review')}:`);
       review.forEach(t => console.log(`   [${t.id}] ${t.title} - ${t.assignedAgent}`));
     }
 
     if (doing.length > 0) {
-      console.log(`\n🚀 Active:`);
+      console.log(`\n🚀 ${t('status', 'active')}:`);
       doing.forEach(t => {
         const elapsed = t.started_at
           ? Math.round((Date.now() - new Date(t.started_at).getTime()) / 60000)
           : '?';
-        console.log(`   [${t.id}] ${t.title} (${t.assignedAgent}) - ${elapsed} min`);
+        console.log(`   [${t.id}] ${t.title} (${t.assignedAgent}) - ${elapsed} ${t('status', 'elapsedUnit')}`);
       });
-      console.log(`\n   💡 Run sai resume to continue`);
+      console.log(`\n   💡 ${t('status', 'resumeTip')}`);
     } else {
-      console.log(`\n💤 No active tasks`);
+      console.log(`\n💤 ${t('status', 'noActive')}`);
     }
 
     if (todo.length > 0) {
-      console.log(`\n📅 Todo (Top 3):`);
+      console.log(`\n📅 ${t('status', 'todo')}:`);
       todo.slice(0, 3).forEach(t => console.log(`   [${t.id}] ${t.title} [${t.priority || 'P2'}]`));
     }
     console.log(`\n==========================================\n`);
@@ -202,10 +288,10 @@ const commands = {
   start: (id) => {
     const tasks = loadJSON(PATHS.tasks);
     const task = tasks.find(t => t.id == id);
-    if (!task) throw new Error(`Task not found: ${id}`);
+    if (!task) throw new Error(`${t('start', 'notFound')}: ${id}`);
 
     if (!VALID_FLOW[task.status].includes('doing')) {
-      throw new Error(`Invalid transition: ${task.status} -> doing`);
+      throw new Error(`${t('start', 'invalidFlow')}: ${task.status} -> doing`);
     }
 
     if (task.dependsOn && task.dependsOn.length > 0) {
@@ -214,7 +300,7 @@ const commands = {
         return !depTask || depTask.status !== 'done';
       });
       if (pendingDeps.length > 0) {
-        throw new Error(`[LOCK] Cannot start task ${id}: dependencies [${pendingDeps.join(', ')}] not done.`);
+        throw new Error(`[LOCK] ${t('start', 'lockFailed')} ${id}: dependencies [${pendingDeps.join(', ')}] ${t('start', 'depsNotDone')}.`);
       }
     }
 
@@ -227,24 +313,24 @@ const commands = {
     if (!fs.existsSync(planPath)) {
       const template = `# Task Plan: TASK-${id} - ${task.title}\n\n## 1. Objective\n${task.description}\n\n## 2. Steps\n- [ ] Step 1: Environment check\n- [ ] Step 2: Implementation\n- [ ] Step 3: Self-test\n\n## 3. Risks\n- None\n\n## 4. Progress\n- ${getTimestamp()}: Task started`;
       fs.writeFileSync(planPath, template, 'utf8');
-      console.log(`[OK] Task ${id} started. Plan created: ${planPath}`);
+      console.log(`[OK] Task ${id} ${t('start', 'started')}: ${planPath}`);
     } else {
-      console.log(`[OK] Task ${id} resumed.`);
+      console.log(`[OK] Task ${id} ${t('start', 'resumed')}.`);
     }
   },
 
   finish: (id) => {
     const tasks = loadJSON(PATHS.tasks);
     const task = tasks.find(t => t.id == id);
-    if (!task) throw new Error(`Task not found: ${id}`);
+    if (!task) throw new Error(`${t('finish', 'notFound')}: ${id}`);
 
     if (!VALID_FLOW[task.status].includes('done')) {
-      throw new Error(`Invalid transition: ${task.status} -> done`);
+      throw new Error(`${t('finish', 'invalidFlow')}: ${task.status} -> done`);
     }
 
     const strategy = CHECK_STRATEGIES[task.type];
     if (strategy) {
-      console.log(`[GATECHECK] Running ${strategy.msg}...`);
+      console.log(`[GATECHECK] ${t('finish', 'gatecheck')} ${strategy.msg}...`);
       try {
         const actualCwd = typeof strategy.cwd === 'function' ? strategy.cwd(id) : strategy.cwd;
         execSync(strategy.cmd, { cwd: actualCwd, stdio: 'inherit' });
@@ -252,22 +338,22 @@ const commands = {
         if (strategy.outputDir) {
           const outputAbs = path.join(actualCwd, strategy.outputDir);
           if (!fs.existsSync(outputAbs)) {
-            console.error(`[GATECHECK] Output dir missing: ${strategy.outputDir}/`);
+            console.error(`[GATECHECK] ${t('finish', 'outputMissing')}: ${strategy.outputDir}/`);
             process.exit(1);
           }
           const files = fs.readdirSync(outputAbs);
           if (files.length === 0) {
-            console.error(`[GATECHECK] Output dir empty: ${strategy.outputDir}/`);
+            console.error(`[GATECHECK] ${t('finish', 'outputEmpty')}: ${strategy.outputDir}/`);
             process.exit(1);
           }
-          console.log(`[GATECHECK] Output verified (${strategy.outputDir}/: ${files.length} files)`);
+          console.log(`[GATECHECK] ${t('finish', 'outputOk')} (${strategy.outputDir}/: ${files.length} ${t('finish', 'files')})`);
         }
 
         const errorLogPath = path.join(actualCwd, 'build_error.log');
         if (fs.existsSync(errorLogPath)) fs.unlinkSync(errorLogPath);
-        console.log(`[GATECHECK] Passed!`);
+        console.log(`[GATECHECK] ${t('finish', 'passed')}`);
       } catch (e) {
-        console.error(`[GATECHECK] Failed! Cannot mark as DONE.`);
+        console.error(`[GATECHECK] ${t('finish', 'failed')}`);
         process.exit(1);
       }
     }
@@ -293,16 +379,16 @@ const commands = {
       if (!fs.existsSync(PATHS.archive)) fs.mkdirSync(PATHS.archive, { recursive: true });
       fs.writeFileSync(path.join(PATHS.archive, `${id}.json`), JSON.stringify(taskEvents, null, 2));
       saveJSON(PATHS.events, events.filter(e => !taskEvents.includes(e)));
-      console.log(`[OK] Task ${id} done. Archived ${taskEvents.length} events.`);
+      console.log(`[OK] Task ${id} ${t('finish', 'done')}. Archived ${taskEvents.length} ${t('finish', 'archived')}.`);
     } else {
-      console.log(`[OK] Task ${id} done.`);
+      console.log(`[OK] Task ${id} ${t('finish', 'done')}.`);
     }
   },
 
   fail: (id, reason) => {
     const tasks = loadJSON(PATHS.tasks);
     const task = tasks.find(t => t.id == id);
-    if (!task) throw new Error(`Task not found: ${id}`);
+    if (!task) throw new Error(`${t('fail', 'notFound')}: ${id}`);
 
     task.status = 'review';
     saveJSON(PATHS.tasks, tasks);
@@ -315,28 +401,28 @@ const commands = {
     });
     saveJSON(PATHS.failures, failures);
 
-    commands.log(task.type, 'failure_reported', `TASK-${id}`, `Failed: ${reason}`);
-    console.log(`[OK] Task ${id} failure recorded.`);
+    commands.log(task.type, 'failure_reported', `TASK-${id}`, `${t('fail', 'failedLabel')}: ${reason}`);
+    console.log(`[OK] Task ${id} ${t('fail', 'recorded')}.`);
   },
 
   fix: (id, plan) => {
     const tasks = loadJSON(PATHS.tasks);
     const task = tasks.find(t => t.id == id);
-    if (!task) throw new Error(`Task not found: ${id}`);
+    if (!task) throw new Error(`${t('fix', 'notFound')}: ${id}`);
 
     task.status = 'doing';
     saveJSON(PATHS.tasks, tasks);
     updateAgentStatus(task.assignedAgent, 'busy');
 
-    commands.log(task.type, 'fix_start', `TASK-${id}`, `Fix started: ${plan}`);
-    console.log(`[OK] Task ${id} fix started.`);
+    commands.log(task.type, 'fix_start', `TASK-${id}`, `${t('fix', 'fixLabel')}: ${plan}`);
+    console.log(`[OK] Task ${id} ${t('fix', 'started')}.`);
   },
 
   log: (role, action, target, details) => {
     const events = loadJSON(PATHS.events);
     events.push({ timestamp: getTimestamp(), role, action, target, details });
     saveJSON(PATHS.events, events);
-    console.log(`[OK] Event logged.`);
+    console.log(`[OK] ${t('log', 'ok')}.`);
   },
 
   sync_dashboard: () => {
@@ -350,6 +436,12 @@ const commands = {
     const progress = totalTasks > 0 ? Math.round((doneTasks / totalTasks) * 100) : 0;
     const formatTime = (date) => date.toISOString().replace('T', ' ').substring(0, 19);
 
+    const busyLabel = LOCALE === 'zh' ? '🔴 繁忙' : '🔴 Busy';
+    const idleLabel = LOCALE === 'zh' ? '🟢 待命' : '🟢 Idle';
+    const statusDone = LOCALE === 'zh' ? '已完成' : 'Done';
+    const statusDoing = LOCALE === 'zh' ? '进行中' : 'In Progress';
+    const statusTodo = LOCALE === 'zh' ? '待办' : 'Todo';
+
     const data = {
       progress,
       lastUpdate: formatTime(new Date()),
@@ -358,20 +450,20 @@ const commands = {
         currentPhase: summary.phase || CONFIG.project.phase,
         activeAgents: Object.values(project.agents).filter(a => a.status === 'busy').length,
         latestCommit: 'HEAD',
-        latestAction: events.length > 0 ? events[events.length - 1].details : 'Idle'
+        latestAction: events.length > 0 ? events[events.length - 1].details : (LOCALE === 'zh' ? '等待指令' : 'Idle')
       },
       projectStatus: Object.entries(CONFIG.agents).map(([agentId, agentConf]) => {
         const agentStatus = project.agents[agentId];
         const isBusy = agentStatus && agentStatus.status === 'busy';
         return {
           title: agentConf.label, icon: 'cpu',
-          status: isBusy ? '🔴 Busy' : '🟢 Idle',
-          currentTask: tasks.find(t => t.assignedAgent === agentId && t.status === 'doing')?.title || 'None',
+          status: isBusy ? busyLabel : idleLabel,
+          currentTask: tasks.find(t => t.assignedAgent === agentId && t.status === 'doing')?.title || (LOCALE === 'zh' ? '无' : 'None'),
           latestAction: agentConf.label
         };
       }),
       gitStatus: { currentBranch: 'main', latestCommit: 'N/A', modifiedFiles: 0, uncommittedChanges: 'None' },
-      memory: { architecture: 'AI Runtime Core v2.6 (Gatekeeper + Timeline)', standards: 'Single Source of Truth (Runtime Layer)' },
+      memory: { architecture: 'S-AI-Guard v2.6 (Gatekeeper + Timeline)', standards: 'Single Source of Truth (Runtime Layer)' },
       blockers: {
         currentBlocker: tasks.find(t => t.status === 'review')?.title || null,
         failedTasks: tasks.filter(t => t.status === 'review').map(t => t.title),
@@ -379,24 +471,24 @@ const commands = {
       },
       aiBehaviorLogs: events.slice(-15).reverse().map(e => ({
         time: e.timestamp.replace('T', ' ').split('.')[0], agent: e.role,
-        behavior: e.action, desc: e.details, status: '🟢 OK', files: [e.target]
+        behavior: e.action, desc: e.details, status: LOCALE === 'zh' ? '🟢 成功' : '🟢 OK', files: [e.target]
       })),
       taskCenter: tasks.map(t => ({
-        id: `TASK-${t.id}`, name: t.title, module: MODULE_MAP[t.type] || 'General',
+        id: `TASK-${t.id}`, name: t.title, module: MODULE_MAP[t.type] || (LOCALE === 'zh' ? '通用' : 'General'),
         agent: t.assignedAgent, priority: t.priority || 'P1',
-        status: t.status === 'done' ? 'Done' : (t.status === 'doing' ? 'In Progress' : 'Todo')
+        status: t.status === 'done' ? statusDone : (t.status === 'doing' ? statusDoing : statusTodo)
       })),
       techStacks: CONFIG.techStacks
     };
 
     fs.writeFileSync(PATHS.dashboardData, `window.DASHBOARD_DATA = ${JSON.stringify(data, null, 2)};`, 'utf8');
-    console.log(`[OK] Dashboard synced.`);
+    console.log(`[OK] ${t('sync', 'ok')}.`);
   },
 
   learn: (id) => {
     const logPath = path.join(PATHS.archive, `${id}.json`);
-    if (!fs.existsSync(logPath)) throw new Error(`Archive not found: ${logPath}. Run finish first.`);
-    console.log(`[ACTION REQUIRED] Analyze ${id}.json and update knowledge.md.`);
+    if (!fs.existsSync(logPath)) throw new Error(`${t('learn', 'notFound')}: ${logPath}`);
+    console.log(`[ACTION REQUIRED] ${t('learn', 'action')} ${id}.json ${t('learn', 'update')}.`);
     commands.log('prd', 'learning_start', `TASK-${id}`, 'Knowledge extraction started');
   },
 
@@ -439,14 +531,14 @@ const commands = {
     const hasError = zombieTasks.length || danglingAgents.length || outOfSyncTasks.length || missingDeps.length;
 
     console.log('==========================================');
-    console.log('🔍 Runtime Audit Report');
+    console.log(`🔍 ${t('check', 'title')}`);
     console.log('==========================================');
-    console.log(`${zombieTasks.length ? '❌' : '✅'} Zombie tasks: ${zombieTasks.length}${zombieTasks.length ? ' (IDs: ' + zombieTasks.join(',') + ')' : ''}`);
-    console.log(`${danglingAgents.length ? '❌' : '✅'} Dangling agents: ${danglingAgents.length}${danglingAgents.length ? ' (' + danglingAgents.join(',') + ')' : ''}`);
-    console.log(`${outOfSyncTasks.length ? '❌' : '✅'} Out of sync: ${outOfSyncTasks.length}${outOfSyncTasks.length ? ' (IDs: ' + outOfSyncTasks.join(',') + ')' : ''}`);
-    console.log(`${missingDeps.length ? '❌' : '✅'} Missing deps: ${missingDeps.length}${missingDeps.length ? ' (' + missingDeps.join(',') + ')' : ''}`);
+    console.log(`${zombieTasks.length ? '❌' : '✅'} ${t('check', 'zombie')}: ${zombieTasks.length}${zombieTasks.length ? ' (IDs: ' + zombieTasks.join(',') + ')' : ''}`);
+    console.log(`${danglingAgents.length ? '❌' : '✅'} ${t('check', 'dangling')}: ${danglingAgents.length}${danglingAgents.length ? ' (' + danglingAgents.join(',') + ')' : ''}`);
+    console.log(`${outOfSyncTasks.length ? '❌' : '✅'} ${t('check', 'outOfSync')}: ${outOfSyncTasks.length}${outOfSyncTasks.length ? ' (IDs: ' + outOfSyncTasks.join(',') + ')' : ''}`);
+    console.log(`${missingDeps.length ? '❌' : '✅'} ${t('check', 'missingDeps')}: ${missingDeps.length}${missingDeps.length ? ' (' + missingDeps.join(',') + ')' : ''}`);
     console.log('==========================================');
-    console.log(`System health: ${hasError ? '🔴 Issues found' : '🟢 Healthy'}`);
+    console.log(`System health: ${hasError ? '🔴 ' + t('check', 'issues') : '🟢 ' + t('check', 'healthy')}`);
     console.log('==========================================');
   },
 
@@ -455,7 +547,7 @@ const commands = {
     const doing = tasks.filter(t => t.status === 'doing');
 
     if (doing.length === 0) {
-      console.log(`[OK] No active tasks. Run sai start <id> to begin.`);
+      console.log(`[OK] ${t('resume', 'noActive')}.`);
       return;
     }
 
@@ -465,22 +557,22 @@ const commands = {
     const elapsed = task.started_at ? Math.round((Date.now() - new Date(task.started_at).getTime()) / 60000) : '?';
 
     console.log(`\n==========================================`);
-    console.log(`🔄 Resume`);
+    console.log(`🔄 ${t('resume', 'title')}`);
     console.log(`==========================================`);
     console.log(`  Task ID:     ${task.id}`);
     console.log(`  Title:       ${task.title}`);
     console.log(`  Description: ${task.description}`);
     console.log(`  Agent:       ${task.assignedAgent}`);
     console.log(`  Priority:    ${task.priority || 'P1'}`);
-    console.log(`  Elapsed:     ${elapsed} min`);
+    console.log(`  Elapsed:     ${elapsed} ${t('status', 'elapsedUnit')}`);
     console.log(`  Plan file:   ${hasPlan ? planPath : 'Not created'}`);
     if (task.dependsOn && task.dependsOn.length > 0) console.log(`  Depends on:  ${task.dependsOn.join(', ')}`);
     console.log(`==========================================`);
     if (hasPlan) {
-      console.log(`\n📋 Plan:\n`);
+      console.log(`\n📋 ${t('resume', 'planLabel')}:\n`);
       console.log(fs.readFileSync(planPath, 'utf8'));
     }
-    console.log(`\n💡 Run sai finish ${task.id} when done, or sai fail ${task.id} <reason> on failure.`);
+    console.log(`\n💡 ${t('resume', 'finishTip')} ${task.id} ${t('resume', 'onFailure')} ${task.id} <reason>`);
     console.log(`==========================================\n`);
   }
 };
