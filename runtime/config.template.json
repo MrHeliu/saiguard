@@ -12,6 +12,7 @@
     "agents": {
       "backend": "backend/output",
       "web": "frontend/output",
+      "webAdmin": "frontend/admin",
       "db": "database/output/sql",
       "test": "test/output/automation-test"
     }
@@ -20,7 +21,8 @@
     "backendagent": { "type": "backend", "label": "Backend" },
     "webagent": { "type": "web", "label": "Frontend" },
     "dbagent": { "type": "db", "label": "Database" },
-    "testagent": { "type": "test", "label": "QA" }
+    "testagent": { "type": "test", "label": "QA" },
+    "prdagent": { "type": "prd", "label": "PM" }
   },
   "checkStrategies": {
     "backend": {
@@ -34,6 +36,9 @@
     "web": {
       "cmd": "npm run build",
       "cwd": "agents.web",
+      "cwdAlternates": [
+        { "keyword": "admin", "path": "agents.webAdmin" }
+      ],
       "outputDir": "dist",
       "msg": "Frontend build check",
       "testCmd": "npx playwright test",
