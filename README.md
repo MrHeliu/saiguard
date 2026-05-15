@@ -130,12 +130,22 @@ Place `.agents/rules/saiguard.md` and `.agents/workflows/saiguard.md` in your pr
 ## Architecture
 
 ```
-┌─────────────┐     ┌──────────┐     ┌───────────────┐     ┌───────────┐
-│  Workspace  │────>│  S-AI-   │────>│  Mechanical   │────>│   Agent   │
-│    Rules    │     │  Guard   │     │  Gatekeeper   │     │  (AI/LLM) │
-│  (15 rules) │     │ (sai.js) │     │ (exit codes)  │     │           │
-└─────────────┘     └──────────┘     └───────────────┘     └───────────┘
+┌──────────┐  ┌──────────┐     ┌──────────┐     ┌───────────────┐     ┌───────────┐
+│   PRD    │  │  Rules   │     │  sai.js  │     │  Gatekeeper   │     │   Agent   │
+│ (What)   │─>│ (15      │────>│ (Engine) │────>│ Build + Test  │────>│  (AI/LLM) │
+└──────────┘  │  rules)  │     └────┬─────┘     └───────────────┘     └───────────┘
+              └──────────┘          │
+                              ┌─────▼──────┐
+                              │    Plan    │
+                              │ (PRD覆盖 +  │
+                              │  实施步骤)  │
+                              └────────────┘
 ```
+
+Three inputs drive the system:
+- **PRD** — what to build (requirements source, auto-linked at `sai start`)
+- **Rules** — how to work (15 hard constraints, loaded every session)
+- **Plan** — the bridge (PRD requirements + implementation steps, generated per task)
 
 Single source of truth: `runtime/` directory. All state flows through sai.js commands.
 
