@@ -154,6 +154,14 @@ const MSG = {
     finishTip:    { en: 'when done, or sai fail', zh: '完成后执行 sai finish' },
     onFailure:    { en: 'on failure', zh: '失败则执行 sai fail' }
   },
+  test: {
+    testRunning:  { en: 'Running tests', zh: '正在运行测试' },
+    testPassed:   { en: 'Tests passed!', zh: '测试通过！' },
+    testFailed:   { en: 'Tests failed!', zh: '测试失败！' },
+    notFound:     { en: 'Task not found', zh: '找不到任务 ID' },
+    noTestConfig: { en: 'No test command configured for this task type', zh: '该任务类型未配置测试命令' },
+    noActiveTest: { en: 'No active task to test. Run sai start <id> first', zh: '无进行中任务，先执行 sai start <id>' }
+  },
   init: {
     configCreated:{ en: 'config.json created from template', zh: 'config.json 已从模板创建' },
     templateMissing:{ en: 'config.template.json not found', zh: 'config.template.json 未找到' },
@@ -194,7 +202,7 @@ const PATHS = {
 // Build check strategies from config
 const CHECK_STRATEGIES = {};
 Object.entries(CONFIG.checkStrategies).forEach(([type, s]) => {
-  const strategy = { cmd: s.cmd, msg: s.msg, outputDir: s.outputDir || null };
+  const strategy = { cmd: s.cmd, msg: s.msg, outputDir: s.outputDir || null, testCmd: s.testCmd || null, testMsg: s.testMsg || null };
 
   if (type === 'web') {
     strategy.cwd = (taskId) => {
@@ -352,6 +360,18 @@ const commands = {
         const errorLogPath = path.join(actualCwd, 'build_error.log');
         if (fs.existsSync(errorLogPath)) fs.unlinkSync(errorLogPath);
         console.log(`[GATECHECK] ${t('finish', 'passed')}`);
+
+        // Test stage
+        if (strategy.testCmd) {
+          console.log(`[TESTCHECK] ${strategy.testMsg || t('test', 'testRunning')}...`);
+          try {
+            execSync(strategy.testCmd, { cwd: actualCwd, stdio: 'inherit' });
+            console.log(`[TESTCHECK] ${t('test', 'testPassed')}`);
+          } catch (e) {
+            console.error(`[TESTCHECK] ${t('test', 'testFailed')}`);
+            process.exit(1);
+          }
+        }
       } catch (e) {
         console.error(`[GATECHECK] ${t('finish', 'failed')}`);
         process.exit(1);
@@ -423,6 +443,39 @@ const commands = {
     events.push({ timestamp: getTimestamp(), role, action, target, details });
     saveJSON(PATHS.events, events);
     console.log(`[OK] ${t('log', 'ok')}.`);
+  },
+
+  test: (id) => {
+    if (!id) {
+      const tasks = loadJSON(PATHS.tasks);
+      const doing = tasks.filter(t => t.status === 'doing');
+      if (doing.length === 0) {
+        console.log(`[OK] ${t('test', 'noActiveTest')}.`);
+        return;
+      }
+      id = doing[0].id;
+    }
+    const tasks = loadJSON(PATHS.tasks);
+    const task = tasks.find(t => t.id == id);
+    if (!task) throw new Error(`${t('test', 'notFound')}: ${id}`);
+
+    const strategy = CHECK_STRATEGIES[task.type];
+    if (!strategy || !strategy.testCmd) {
+      console.log(`[SKIP] ${t('test', 'noTestConfig')}.`);
+      return;
+    }
+
+    const actualCwd = typeof strategy.cwd === 'function' ? strategy.cwd(id) : strategy.cwd;
+    console.log(`[TESTCHECK] ${strategy.testMsg || t('test', 'testRunning')}...`);
+    try {
+      execSync(strategy.testCmd, { cwd: actualCwd, stdio: 'inherit' });
+      console.log(`[TESTCHECK] ${t('test', 'testPassed')}`);
+      commands.log(task.type, 'test_pass', `TASK-${id}`, strategy.testMsg || 'Tests passed');
+    } catch (e) {
+      console.error(`[TESTCHECK] ${t('test', 'testFailed')}`);
+      commands.log(task.type, 'test_fail', `TASK-${id}`, strategy.testMsg || 'Tests failed');
+      process.exit(1);
+    }
   },
 
   sync_dashboard: () => {
@@ -589,5 +642,5 @@ if (commands[normalizedCmd]) {
   }
 } else {
   console.log(`Usage: node runtime/sai.js <command> [args]`);
-  console.log(`Commands: init, status, start, finish, fail, fix, log, sync-dashboard, learn, check, resume`);
+  console.log(`Commands: init, status, start, finish, fail, fix, log, sync-dashboard, learn, check, resume, test`);
 }

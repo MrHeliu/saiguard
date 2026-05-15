@@ -26,13 +26,17 @@
       "cmd": "mvn compile",
       "cwd": "agents.backend",
       "outputDir": "target",
-      "msg": "Backend compile check"
+      "msg": "Backend compile check",
+      "testCmd": "mvn test",
+      "testMsg": "Backend unit tests"
     },
     "web": {
       "cmd": "npm run build",
       "cwd": "agents.web",
       "outputDir": "dist",
-      "msg": "Frontend build check"
+      "msg": "Frontend build check",
+      "testCmd": "npx playwright test",
+      "testMsg": "Frontend functional tests"
     },
     "db": {
       "cmd": "cat {sqlFile} | sqlite3 :memory:",
