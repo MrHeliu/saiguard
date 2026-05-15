@@ -130,16 +130,28 @@ Place `.agents/rules/saiguard.md` and `.agents/workflows/saiguard.md` in your pr
 ## Architecture
 
 ```
-┌──────────┐  ┌──────────┐     ┌──────────┐     ┌───────────────┐     ┌───────────┐
-│   PRD    │  │  Rules   │     │  sai.js  │     │  Gatekeeper   │     │   Agent   │
-│ (What)   │─>│ (15      │────>│ (Engine) │────>│ Build + Test  │────>│  (AI/LLM) │
-└──────────┘  │  rules)  │     └────┬─────┘     └───────────────┘     └───────────┘
-              └──────────┘          │
-                              ┌─────▼──────┐
-                              │    Plan    │
-                              │ (PRD覆盖 +  │
-                              │  实施步骤)  │
-                              └────────────┘
+┌──────────┐     ┌──────────┐
+│   PRD    │     │  Rules   │
+│ (What)   │     │  (How)   │
+└────┬─────┘     └────┬─────┘
+     │                │
+     ▼                ▼
+┌──────────────────────┐
+│       sai.js         │
+└──────────┬───────────┘
+           │ generates
+           ▼
+     ┌───────────┐
+     │   Plan    │
+     │  (PRD +   │
+     │  Steps)   │
+     └─────┬─────┘
+           │ guides
+           ▼
+    ┌───────────┐     ┌───────────────┐
+    │   Agent   │────>│  Gatekeeper   │──> done
+    │  (AI/LLM) │     │ Build + Test  │
+    └───────────┘     └───────────────┘
 ```
 
 Three inputs drive the system:
