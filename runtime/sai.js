@@ -319,9 +319,18 @@ const commands = {
 
     const planPath = path.join(PATHS.plans, `task_${id}.md`);
     if (!fs.existsSync(planPath)) {
-      const template = `# Task Plan: TASK-${id} - ${task.title}\n\n## 1. Objective\n${task.description}\n\n## 2. Steps\n- [ ] Step 1: Environment check\n- [ ] Step 2: Implementation\n- [ ] Step 3: Self-test\n\n## 3. Risks\n- None\n\n## 4. Progress\n- ${getTimestamp()}: Task started`;
+      const prdPath = CONFIG.paths && CONFIG.paths.prd ? path.join(BASE_DIR, ...CONFIG.paths.prd.split('/')) : null;
+      let prdFiles = [];
+      if (prdPath && fs.existsSync(prdPath)) {
+        prdFiles = fs.readdirSync(prdPath).filter(f => f.endsWith('.md'));
+      }
+      const prdSection = prdFiles.length > 0
+        ? `\n## PRD 需求覆盖（必填）\n> 需求目录：${CONFIG.paths.prd}/\n> 原始需求：prdagent/output/侨联app需求.docx\n> PRD 文档：${prdFiles.join('、')}\n> 请阅读与本任务相关的 PRD 文档，提取需求编号和验收标准：\n\n- 需求编号：（如 H-01, N-02, A-03 等）\n- 验收标准：\n  - [ ] 需求点1\n  - [ ] 需求点2\n  - [ ] ...`
+        : '';
+      const template = `# Task Plan: TASK-${id} - ${task.title}\n\n## 1. Objective\n${task.description}\n${prdSection}\n## 2. Steps\n- [ ] Step 1: Read PRD and extract requirements\n- [ ] Step 2: Implementation\n- [ ] Step 3: Self-test against PRD acceptance criteria\n\n## 3. Risks\n- None\n\n## 4. Progress\n- ${getTimestamp()}: Task started`;
       fs.writeFileSync(planPath, template, 'utf8');
       console.log(`[OK] Task ${id} ${t('start', 'started')}: ${planPath}`);
+      if (prdPath) console.log(`[PRD] 需求文档：${CONFIG.paths.prd}，请在 plan 中填写 PRD 需求覆盖`);
     } else {
       console.log(`[OK] Task ${id} ${t('start', 'resumed')}.`);
     }

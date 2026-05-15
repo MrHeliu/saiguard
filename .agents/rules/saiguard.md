@@ -30,3 +30,12 @@ trigger: always_on
     - 禁止使用：Arial/Inter/Roboto 等通用字体、紫色渐变、纯白背景(#fff)、直角无边框布局
     - 每个页面必须有至少一个视觉亮点：渐变背景、装饰性分割线、微动画或品牌色点缀
     - 使用 frontend-design skill 时的审美标准：大胆且有辨识度，拒绝模板化 AI 风格
+14. 依赖管理约束：
+    - 禁止在项目根目录安装任何 npm/pip 依赖（禁止出现根级 package.json、node_modules、requirements.txt）
+    - 禁止在 runtime/ 目录安装依赖（runtime/ 保持零依赖纯净，仅运行 sai.js）
+    - 各 agent 需要的依赖装在各自目录下（如 testagent/output/、webagent/output/ 等）
+    - 安装新依赖前先确认必要性，优先使用 Node.js/Python 标准库
+15. 临时文件与产出物管理：
+    - scratch/ 仅用于临时工作文件（截图脚本、调试脚本等），任务完成后必须清理，禁止保留
+    - artifacts/ 仅存放项目交付物（展示截图、演示素材），必须有意义明确的文件名，禁止堆砌中间产物
+    - 每次 sai finish 前，检查 scratch/ 和 artifacts/ 是否有残留无用文件，有则清理

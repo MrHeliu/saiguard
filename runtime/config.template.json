@@ -8,6 +8,7 @@
     "runtime": "runtime",
     "archive": "_archive/logs",
     "dashboard": "dashboard/data.js",
+    "prd": "prdagent/output",
     "agents": {
       "backend": "backend/output",
       "web": "frontend/output",
